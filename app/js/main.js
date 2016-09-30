@@ -25,7 +25,7 @@ function hideMessage( execCompleted ) {
 	} );
 }
 
-var channelURL = pulsarServerBase + '/' + pulsarPlatform + '/' + pulsarVersion + '/main.json';
+var channelURL = pulsarServerBase + '/' + pulsarPlatform + '/' + pulsarVersion.substr(0, pulsarVersion.lastIndexOf( '.' ) ) + '/main.json';
 
 document.addEventListener( 'DOMContentLoaded', function () {
 	$.ajax( channelURL, {

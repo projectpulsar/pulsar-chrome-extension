@@ -50,7 +50,7 @@ function checkGamepad() {
 			] );
 		} else {
 			for ( t = 0; t < gamepadLayout.length; t++ ) {
-				if ( ( ( gamepadLayout[t].button === '' ) || ( gamepadLayout[t].gamepad_id !== gamepad.id ) ) && ( gamepadButtons >= t+9 ) ) { // Minimum 14 buttons for d-pad support
+				if ( ( ( gamepadLayout[t].button === '' ) || ( gamepadLayout[t].gamepad_id !== gamepad.id ) ) && ( t < 2 || gamepadButtons >= 14 ) ) { // Minimum 14 buttons for d-pad support
 					if ( waitingAction ) {
 						for ( i = 0; i < gamepad.buttons.length; i++ ) {
 							if ( gamepad.buttons[i].pressed && ( typeof lastPressedButton  == 'undefined' || !gamepad.buttons[lastPressedButton].pressed ) ) {
