@@ -84,7 +84,9 @@ function checkGamepad() {
 	} else {
 		gamepads = navigator.getGamepads();
 		for ( gamepadIndex=0; gamepadIndex < gamepads.length; gamepadIndex++ ) {
-			if ( ( typeof gamepads[gamepadIndex] == 'object' ) && ( typeof gamepads[gamepadIndex].buttons == 'object' ) ) {
+			if ( 	gamepads[gamepadIndex] &&
+				( typeof gamepads[gamepadIndex] == 'object' ) &&
+				( typeof gamepads[gamepadIndex].buttons == 'object' ) ) {
 				gamepadButtons = gamepads[gamepadIndex].buttons.length;
 				if ( typeof gamepads[gamepadIndex].axes == 'object' ) {
 					gamepadAxes = gamepads[gamepadIndex].axes.length;
