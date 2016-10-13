@@ -6,6 +6,7 @@ var gamepads;
 var mainGamepad;
 var gamepadIndex;
 var gamepadButtons;
+var gamepadAxes;
 var waitingAction = false;
 var lastPressedButton;
 
@@ -29,7 +30,6 @@ gamepadLayout = JSON.parse( localStorage.pulsarGamepadLayout );
 function gamepadAnyButtonPressed() {
 	for (var i = 0; i < gamepadButtons; i++) {
 		if ( gamepads[gamepadIndex].buttons[i].pressed ) {
-			lastPressedButton = i;
 			return true;
 		}
 	}
@@ -39,7 +39,8 @@ function gamepadAnyButtonPressed() {
 function checkGamepad() {
 	if ( typeof mainGamepad !== 'undefined' ) {
 		var gamepad = navigator.getGamepads()[ mainGamepad ];
-		if ( gamepad.id.includes( 'Xbox 360' ) ) {
+		if ( 	gamepad.id.includes( 'Vendor: 045e Product: 0719' ) ||  // XBox 360 wireless controller
+			gamepad.id.includes( 'Vendor: 045e Product: 028e' ) ) { // XBox 360 wired controller
 			localStorage.pulsarGamepadLayout = JSON.stringify( [
 				{ description: 'back', button: 8, gamepad_id: gamepad.id },
 				{ description: 'start', button: 9, gamepad_id: gamepad.id },
@@ -52,7 +53,7 @@ function checkGamepad() {
 			for ( t = 0; t < gamepadLayout.length; t++ ) {
 				if ( ( ( gamepadLayout[t].button === '' ) || ( gamepadLayout[t].gamepad_id !== gamepad.id ) ) && ( t < 2 || gamepadButtons >= 14 ) ) { // Minimum 14 buttons for d-pad support
 					if ( waitingAction ) {
-						for ( i = 0; i < gamepad.buttons.length; i++ ) {
+						for ( i = 4; i < gamepad.buttons.length; i++ ) {
 							if ( gamepad.buttons[i].pressed && ( typeof lastPressedButton  == 'undefined' || !gamepad.buttons[lastPressedButton].pressed ) ) {
 								lastPressedButton = i;
 								gamepadLayout[t].button = i;
@@ -83,16 +84,23 @@ function checkGamepad() {
 	} else {
 		gamepads = navigator.getGamepads();
 		for ( gamepadIndex=0; gamepadIndex < gamepads.length; gamepadIndex++ ) {
-			if ( typeof gamepads[gamepadIndex] == 'object' ) {
+			if ( ( typeof gamepads[gamepadIndex] == 'object' ) && ( typeof gamepads[gamepadIndex].buttons == 'object' ) ) {
 				gamepadButtons = gamepads[gamepadIndex].buttons.length;
-				if ( ( gamepadButtons >= 10 ) && gamepadAnyButtonPressed() ) {
-					mainGamepad = gamepadIndex;
-					localStorage.pulsarMainGamepad = mainGamepad;
-					$( '#flex-row' ).fadeOut( 0 );
-					break;
+				if ( typeof gamepads[gamepadIndex].axes == 'object' ) {
+					gamepadAxes = gamepads[gamepadIndex].axes.length;
+				} else {
+					gamepadAxes = 0;
 				}
-			} else {
-				$( '#flex-row' ).html( "<div class='flex-item'><img style='-webkit-filter: contrast(5%);' src='gamepad.png'></div><div class='flex-item'>connect your gamepad<br>and press any button</div>" );
+				if ( gamepadButtons >= 6 && gamepadAxes >= 2 ) {
+					if ( gamepadAnyButtonPressed() ) {
+						mainGamepad = gamepadIndex;
+						localStorage.pulsarMainGamepad = mainGamepad;
+						$( '#flex-row' ).fadeOut( 0 );
+						break;
+					}
+				} else {
+					$( '#flex-row' ).html( "<div class='flex-item'>minimum 2 axes and 6 buttons gamepad required</div>" );
+				}
 			}
 		}
 	}
