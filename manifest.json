@@ -1,6 +1,6 @@
 {
   "name": "Pulsar",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Turn your browser into a gamepad controlled entertainment system",
   "author": "Emilio Rubio Rigo",
   "icons": { "16": "icon_16.png",
