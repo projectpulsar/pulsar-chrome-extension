@@ -28,7 +28,7 @@ function pulsarTriggerKeyboardKeyup( keyCode )
 
 function pulsarCheckGamepad() {
 	var pulsarGamepad = navigator.getGamepads()[ pulsarMainGamepad ];
-	if ( typeof pulsarGamepad == 'object' ) {
+	if ( pulsarGamepad && typeof pulsarGamepad == 'object' ) {
 		if ( typeof pulsarKeymap == 'object' ) {
 			if ( typeof pulsarKeymap.button1 == 'number' ) {
 				if ( pulsarGamepad.buttons[ 0 ].pressed ) {

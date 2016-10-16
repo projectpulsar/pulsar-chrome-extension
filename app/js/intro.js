@@ -39,16 +39,17 @@ function gamepadAnyButtonPressed() {
 function checkGamepad() {
 	if ( typeof mainGamepad !== 'undefined' ) {
 		var gamepad = navigator.getGamepads()[ mainGamepad ];
-		if ( 	gamepad.id.includes( 'Vendor: 045e Product: 0719' ) ||  // XBox 360 wireless controller
-			gamepad.id.includes( 'Vendor: 045e Product: 028e' ) ) { // XBox 360 wired controller
-			localStorage.pulsarGamepadLayout = JSON.stringify( [
-				{ description: 'back', button: 8, gamepad_id: gamepad.id },
-				{ description: 'start', button: 9, gamepad_id: gamepad.id },
-				{ description: 'up', button: 12, gamepad_id: gamepad.id },
-				{ description: 'down', button: 13, gamepad_id: gamepad.id },
-				{ description: 'left', button: 14, gamepad_id: gamepad.id },
-				{ description: 'right', button: 15, gamepad_id: gamepad.id }
-			] );
+		if (	gamepad.id.includes( 'Vendor: 045e Product: 0719' ) ||	// XBox 360 wireless controller
+				gamepad.id.includes( 'Vendor: 045e Product: 028e' ) ||	// XBox 360 wired controller
+				gamepad.id.includes( 'Xbox 360' ) ) {					// XBox 360 Windows id style
+					localStorage.pulsarGamepadLayout = JSON.stringify( [
+						{ description: 'back', button: 8, gamepad_id: gamepad.id },
+						{ description: 'start', button: 9, gamepad_id: gamepad.id },
+						{ description: 'up', button: 12, gamepad_id: gamepad.id },
+						{ description: 'down', button: 13, gamepad_id: gamepad.id },
+						{ description: 'left', button: 14, gamepad_id: gamepad.id },
+						{ description: 'right', button: 15, gamepad_id: gamepad.id }
+					] );
 		} else {
 			for ( t = 0; t < gamepadLayout.length; t++ ) {
 				if ( ( ( gamepadLayout[t].button === '' ) || ( gamepadLayout[t].gamepad_id !== gamepad.id ) ) && ( t < 2 || gamepadButtons >= 14 ) ) { // Minimum 14 buttons for d-pad support
@@ -84,25 +85,25 @@ function checkGamepad() {
 	} else {
 		gamepads = navigator.getGamepads();
 		for ( gamepadIndex=0; gamepadIndex < gamepads.length; gamepadIndex++ ) {
-			if ( 	gamepads[gamepadIndex] &&
+			if 	( gamepads[gamepadIndex] &&
 				( typeof gamepads[gamepadIndex] == 'object' ) &&
 				( typeof gamepads[gamepadIndex].buttons == 'object' ) ) {
-				gamepadButtons = gamepads[gamepadIndex].buttons.length;
-				if ( typeof gamepads[gamepadIndex].axes == 'object' ) {
-					gamepadAxes = gamepads[gamepadIndex].axes.length;
-				} else {
-					gamepadAxes = 0;
-				}
-				if ( gamepadButtons >= 6 && gamepadAxes >= 2 ) {
-					if ( gamepadAnyButtonPressed() ) {
-						mainGamepad = gamepadIndex;
-						localStorage.pulsarMainGamepad = mainGamepad;
-						$( '#flex-row' ).fadeOut( 0 );
-						break;
+					gamepadButtons = gamepads[gamepadIndex].buttons.length;
+					if ( typeof gamepads[gamepadIndex].axes == 'object' ) {
+						gamepadAxes = gamepads[gamepadIndex].axes.length;
+					} else {
+						gamepadAxes = 0;
 					}
-				} else {
-					$( '#flex-row' ).html( "<div class='flex-item'>minimum 2 axes and 6 buttons gamepad required</div>" );
-				}
+					if ( gamepadButtons >= 6 && gamepadAxes >= 2 ) {
+						if ( gamepadAnyButtonPressed() ) {
+							mainGamepad = gamepadIndex;
+							localStorage.pulsarMainGamepad = mainGamepad;
+							$( '#flex-row' ).fadeOut( 0 );
+							break;
+						}
+					} else {
+						$( '#flex-row' ).html( "<div class='flex-item'>minimum 2 axes and 6 buttons gamepad required</div>" );
+					}
 			}
 		}
 	}
