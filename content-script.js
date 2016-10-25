@@ -9,7 +9,11 @@ var currentUrl;
 
 function urlParameter( url, parameter ) {
 	var results = new RegExp( '[\?&]' + parameter + '=([^&#]*)' ).exec( url );
-	return decodeURI( results[1] );
+	if ( results !== null ) {	
+		return decodeURI( results[1] );
+	} else {
+		return '';
+	}
 }
 
 chrome.runtime.sendMessage( { action: 'getUrl' }, function( response ) {
@@ -57,6 +61,14 @@ chrome.runtime.sendMessage( { action: 'getUrl' }, function( response ) {
 					this.parentNode.removeChild( this );
 				};
 				( document.head || document.documentElement ).appendChild( selectedItemScript );
+
+				var selectedCategory = urlParameter( currentUrl, 'pulsarSelectedCategory' );
+				var selectedCategoryScript = document.createElement( 'script' );
+				selectedCategoryScript.innerText = 'var pulsarSelectedCategory = ' + selectedCategory + ';';
+				selectedCategoryScript.onload = function() {
+					this.parentNode.removeChild( this );
+				};
+				( document.head || document.documentElement ).appendChild( selectedCategoryScript );
 
 				var keymap = urlParameter( currentUrl, 'pulsarKeymap' );
 				if ( keymap != '' ) {
