@@ -7,12 +7,14 @@ var pulsarServerBase = 'https://projectpulsar.github.io/platform-resources';
 var pulsarVersion = chrome.app.getDetails().version;
 var categories;
 var showingMessage = false;
-var emularityURL = pulsarServerBase + '/' + pulsarPlatform + '/' + pulsarVersion.substr(0, pulsarVersion.lastIndexOf( '.' ) ) + '/services/emularity/emularity.html';
+var pulsarServerFull = pulsarServerBase + '/' + pulsarPlatform + '/' + pulsarVersion.substr(0, pulsarVersion.lastIndexOf( '.' ) );
+var channelURL = pulsarServerFull + '/main.json';
+var emularityURL = pulsarServerFull + '/services/emularity/emularity.html';
 
 function showMessage( message, completed ) {
 	$( '#message-box' ).html( message + "<br><br><span style='font-size: 1.8rem; font-style: normal; display: block; text-align: right'>press any button to continue</span>");
 	showingMessage = completed || true;
-	$( '#message-box' ).css( 'transform', 'translate( -' + Math.round($("#message-box").outerWidth() / 2) + 'px, -' + Math.round($("#message-box").outerHeight() / 2) + 'px )' );
+	$( '#message-box' ).css( 'transform', 'translate( -' + Math.round( $( "#message-box" ).outerWidth() / 2 ) + 'px, -' + Math.round( $( "#message-box" ).outerHeight() / 2 ) + 'px )' );
 	$( '#message-box' ).fadeTo( 200, 1 );
 }
 
@@ -35,9 +37,9 @@ function urlParameter( parameter ) {
 	}
 }
 
-var channelURL = pulsarServerBase + '/' + pulsarPlatform + '/' + pulsarVersion.substr(0, pulsarVersion.lastIndexOf( '.' ) ) + '/main.json';
-
 document.addEventListener( 'DOMContentLoaded', function () {
+	$( '#loading-spinner' ).css( 'transform', 'translate( -' + Math.round( $( "#loading-spinner" ).outerWidth() / 2 ) + 'px, -' + Math.round( $( "#loading-spinner" ).outerHeight() / 2 ) + 'px )' );
+	$( '#loading-spinner' ).fadeTo( 200, 100 );
 	$.ajax( channelURL, {
 		type : 'GET',
 		cache: false,
@@ -97,9 +99,11 @@ document.addEventListener( 'DOMContentLoaded', function () {
 			});
 		})
 		.fail(function() {
-			$( '#container' ).css( 'opacity', '100' );
-			requestAnimationFrame( checkGamepad );
-			showMessage( 'Error loading channel content', function() { window.location.reload( false ); } );
+			$( '#loading-spinner' ).fadeTo( 200, 0, function() {
+				$( '#container' ).css( 'opacity', '100' );
+				requestAnimationFrame( checkGamepad );
+				showMessage( 'Error loading channel content', function() { window.location.reload( false ); } );
+			});
 		});
 });
 
@@ -178,15 +182,17 @@ function initShowcase() {
 	$( '.category-content' ).hide();
 	$( '.selected-category .category-content' ).show();
 	$( 'html, body' ).scrollTop( $( '.category' ).eq( prevCategory ).offset().top - $( '#top-blank' ).outerHeight( true ) );
-	if ( ( typeof localStorage.pulsarFirstTipShown == 'undefined' ) || ( localStorage.pulsarFirstTipShown !== pulsarVersion ) ) {
-		showMessage( 'Up/Down: Change category<br>Left/Right: Change selection<br>Button 1: Play selected item<br>Back+Start: Return to the main screen<br>ESC: Exit Pulsar', function() {
-			localStorage.pulsarFirstTipShown = pulsarVersion;
+	$( '#loading-spinner' ).fadeTo( 200, 0, function() {
+		if ( ( typeof localStorage.pulsarFirstTipShown == 'undefined' ) || ( localStorage.pulsarFirstTipShown !== pulsarVersion ) ) {
+			showMessage( 'Up/Down: Change category<br>Left/Right: Change selection<br>Button 1: Play selected item<br>Back+Start: Return to the main screen<br>ESC: Exit Pulsar', function() {
+				localStorage.pulsarFirstTipShown = pulsarVersion;
+				$( '#container' ).animate( { opacity: 100 } );
+			});
+		} else {
 			$( '#container' ).animate( { opacity: 100 } );
-		});
-	} else {
-		$( '#container' ).animate( { opacity: 100 } );
-	}
-	requestAnimationFrame( checkGamepad );
+		}
+		requestAnimationFrame( checkGamepad );
+	});
 }
 
 function changeCategory( increment ) {
