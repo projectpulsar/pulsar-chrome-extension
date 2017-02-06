@@ -1,100 +1,75 @@
 // -- main.js --
 //
-// Pulsar main screen script. Loads a channel and presents a gamepad controlled launcher.
+// Pulsar main screen script. Loads a channel from the configuration file and presents a gamepad controlled launcher.
 
 var pulsarPlatform = 'chrome-extension';
 var pulsarServerBase = 'https://projectpulsar.github.io/platform-resources';
 var pulsarVersion = chrome.app.getDetails().version;
 var categories;
-var showingMessage = false;
-var pulsarServerFull = pulsarServerBase + '/' + pulsarPlatform + '/' + pulsarVersion.substr(0, pulsarVersion.lastIndexOf( '.' ) );
-var channelURL = pulsarServerFull + '/main.json';
-var emularityURL = pulsarServerFull + '/services/emularity/emularity.html';
-
-function showMessage( message, completed ) {
-	$( '#message-box' ).html( message + "<br><br><span style='font-size: 1.8rem; font-style: normal; display: block; text-align: right'>press any button to continue</span>");
-	showingMessage = completed || true;
-	$( '#message-box' ).css( 'transform', 'translate( -' + Math.round( $( "#message-box" ).outerWidth() / 2 ) + 'px, -' + Math.round( $( "#message-box" ).outerHeight() / 2 ) + 'px )' );
-	$( '#message-box' ).fadeTo( 200, 1 );
-}
-
-function hideMessage( execCompleted ) {
-	execCompleted = typeof execCompleted !== 'undefined' ? execCompleted : true;
-	$( '#message-box' ).fadeTo( 200, 0, function() {
-		if ( ( typeof showingMessage == 'function' ) && execCompleted ) {
-			showingMessage();
-		}
-		showingMessage = false;
-	} );
-}
-
-function urlParameter( parameter ) {
-	var results = new RegExp( '[\?&]' + parameter + '=([^&#]*)' ).exec( window.location.href );
-	if ( results !== null ) {	
-		return decodeURI( results[1] );
-	} else {
-		return '';
-	}
-}
+var emularityURL = pulsarServerBase + '/' + pulsarPlatform + '/services/emularity/emularity.html';
+var configURL = localStorage.pulsarConfig;
+var channel = localStorage.pulsarChannel;
+var ref = localStorage.pulsarRef;
 
 document.addEventListener( 'DOMContentLoaded', function () {
 	$( '#loading-spinner' ).css( 'transform', 'translate( -' + Math.round( $( "#loading-spinner" ).outerWidth() / 2 ) + 'px, -' + Math.round( $( "#loading-spinner" ).outerHeight() / 2 ) + 'px )' );
 	$( '#loading-spinner' ).fadeTo( 200, 100 );
-	$.ajax( channelURL, {
+	$.ajax( configURL, {
 		type : 'GET',
 		cache: false,
 		dataType: 'json' } )
-		.done( function( channel ) {
-			$.each( channel, function( channelTitle, categories ) {
-				$( '#top-bar' ).html( 'pulsar' );
-				$.each( categories, function( categoryTitle, category ) {
-					$( '#showcase' ).append( '<div class="category"></div>' );
-					$( '.category' ).last().append( '<div class="category-title">' + categoryTitle +'</div>' );
-					contentType = category[ 'content-type' ];
-					$( '.category' ).last().append( '<div class="category-content"></div>' );
-					$( '.category-content' ).last().append( '<div class="showcase-slider"></div>' );
-					$.each( category.items, function( order, item ) {
-						switch( contentType ) {
-						case 'web':
-							var newItem = $( '<div class="item"><img src="' + item.thumbnail +'"></div>' );
-							newItem.data( 'title', item.title || '-' );
-							newItem.data( 'description', item.description || '-' );
-							if ( typeof item.info !== 'undefined' ) {
-								newItem.data( 'info', $('<div>' + item.info + '</div>').text().toUpperCase() );
-							} else {
-								newItem.data( 'info', '' );
-							}
-							newItem.data( 'url', item.url + '?pulsarActive=yes&pulsarKeymap=' + item.keymap || '' );
-							$( '.showcase-slider' ).last().append( newItem );
-							if ( ( $( '.category' ).last().find( '.item' ).length == category.items.length ) && ( $( '.category' ).length == Object.keys( categories ).length ) ) { initShowcase(); };
-							break;
-						case 'emularity':
-							$.ajax( 'http://archive.org/metadata/' + item.id, {
-								async : false,
-								type : 'GET',
-								dataType: 'json' } )
-								.done( function( data ) {
-									description = 'uploaded by ' + data.metadata.uploader;
-									if ( typeof data.metadata.emulator_ext == 'object' ) {
-										var emulator_ext = data.metadata.emulator_ext[0];
-									} else {
-										var emulator_ext = data.metadata.emulator_ext;
-									}
-									var newItem = $( '<div class="item"><div class="vertical-align-helper"></div><img style="vertical-align: middle; display: inline-block" src="https://archive.org/services/img/' + item.id + '"></div>' );
-									newItem.data('title', data.metadata.title || '-' );
-									newItem.data( 'description', item.description || '-' );
-									if ( typeof item.info !== 'undefined' ) {
-										newItem.data( 'info', $('<div>' + item.info + '</div>').text().toUpperCase() );
-									} else {
-										newItem.data( 'info', '' );
-									}
-									newItem.data('url', emularityURL + '?pulsarActive=yes&identifier=' + item.id + '&emulator_ext=' + emulator_ext + '?pulsarActive=yes&pulsarKeymap=' + item.keymap || '' );
-									$( '.showcase-slider' ).last().append( newItem );
-									if ( ( $( '.category' ).last().find( '.item' ).length == category.items.length ) && ( $( '.category' ).length == Object.keys( categories ).length ) ) { initShowcase(); };
-								});
-							break;
+		.done( function( configuration ) {
+			document.title = configuration.channels[ channel ].title;
+			$( '#top-bar, #top-blank' ).html( configuration.channels[ channel ].title.toUpperCase() );
+			$.each( configuration.channels[ channel ].categories, function( order, category ) {
+				$( '#showcase' ).append( '<div class="category"></div>' );
+				$( '.category' ).last().append( '<div class="category-title">' + category.title +'</div>' );
+				contentType = category.content_type;
+				$( '.category' ).last().append( '<div class="category-content"></div>' );
+				$( '.category-content' ).last().append( '<div class="showcase-slider"></div>' );
+				$.each( category.items, function( order, item ) {
+					switch( contentType ) {
+					case 'web':
+						var newItem = $( '<div class="item"><img src="' + item.thumbnail +'"></div>' );
+						newItem.data( 'title', item.title || '-' );
+						newItem.data( 'description', item.description || '-' );
+						if ( typeof item.info !== 'undefined' ) {
+							newItem.data( 'info', $('<div>' + item.info + '</div>').text().toUpperCase() );
+						} else {
+							newItem.data( 'info', '' );
 						}
-					});
+						newItem.data( 'url', item.url );
+						newItem.data( 'keymap', item.keymap || '' );
+						$( '.showcase-slider' ).last().append( newItem );
+						if ( ( $( '.category' ).last().find( '.item' ).length == category.items.length ) && ( $( '.category' ).length == configuration.channels[ channel ].categories.length ) ) { initShowcase(); };
+						break;
+					case 'emularity':
+						$.ajax( 'http://archive.org/metadata/' + item.id, {
+							async : false,
+							type : 'GET',
+							dataType: 'json' } )
+							.done( function( data ) {
+								description = 'uploaded by ' + data.metadata.uploader;
+								if ( typeof data.metadata.emulator_ext == 'object' ) {
+									var emulator_ext = data.metadata.emulator_ext[0];
+								} else {
+									var emulator_ext = data.metadata.emulator_ext;
+								}
+								var newItem = $( '<div class="item"><div class="vertical-align-helper"></div><img style="vertical-align: middle; display: inline-block" src="https://archive.org/services/img/' + item.id + '"></div>' );
+								newItem.data( 'title', data.metadata.title || '-' );
+								newItem.data( 'description', '' );
+								newItem.data( 'keymap', item.keymap || '' );
+								if ( typeof item.info !== 'undefined' ) {
+									newItem.data( 'info', $('<div>' + item.info + '</div>').text().toUpperCase() );
+								} else {
+									newItem.data( 'info', '' );
+								}
+								newItem.data('url', emularityURL + '?identifier=' + item.id + '&emulator_ext=' + emulator_ext );
+								$( '.showcase-slider' ).last().append( newItem );
+								if ( ( $( '.category' ).last().find( '.item' ).length == category.items.length ) && ( $( '.category' ).length == configuration.channels[ channel ].categories.length ) ) { initShowcase(); };
+							});
+						break;
+					}
 				});
 			});
 		})
@@ -108,20 +83,8 @@ document.addEventListener( 'DOMContentLoaded', function () {
 });
 
 function initShowcase() {
-	var selectedItemURL = urlParameter( 'selectedItem' );
-	var selectedCategoryURL = urlParameter( 'selectedCategory' );
-
-	if ( selectedItemURL === '' ) {
-		var selectedItem = 0;
-	} else {
-		var selectedItem = parseInt( selectedItemURL );
-	}
-
-	if ( selectedCategoryURL === '' ) {
-		var selectedCategory = 0;
-	} else {
-		var selectedCategory = parseInt( selectedCategoryURL );
-	}
+	var selectedItem = parseInt( localStorage.pulsarSelectedItem );
+	var selectedCategory = parseInt( localStorage.pulsarSelectedCategory );
 
 	if ( selectedCategory == 0 ) {
 		var prevCategory = 0;
@@ -183,14 +146,7 @@ function initShowcase() {
 	$( '.selected-category .category-content' ).show();
 	$( 'html, body' ).scrollTop( $( '.category' ).eq( prevCategory ).offset().top - $( '#top-blank' ).outerHeight( true ) );
 	$( '#loading-spinner' ).fadeTo( 200, 0, function() {
-		if ( ( typeof localStorage.pulsarFirstTipShown == 'undefined' ) || ( localStorage.pulsarFirstTipShown !== pulsarVersion ) ) {
-			showMessage( 'Up/Down: Change category<br>Left/Right: Change selection<br>Button 1: Play selected item<br>Back+Start: Return to the main screen<br>ESC: Exit Pulsar', function() {
-				localStorage.pulsarFirstTipShown = pulsarVersion;
-				$( '#container' ).animate( { opacity: 100 } );
-			});
-		} else {
-			$( '#container' ).animate( { opacity: 100 } );
-		}
+		$( '#container' ).animate( { opacity: 100 } );
 		requestAnimationFrame( checkGamepad );
 	});
 }
@@ -242,18 +198,29 @@ function UCright(){
 	}
 }
 
+function UCActionBack(){
+	if ( ref == 'channels' ) {
+		$( '#container' ).fadeOut( 100, function() {
+			window.location.href = 'channels.html?config=' + configURL;
+		});
+	}
+}
+
 function UCAction1(){
 	var currentItem = $( '.selected-item' ).index( '.item:not(.empty, .slick-cloned)' );
 	var info = $( '.selected-item' ).data( 'info' );
+	localStorage.pulsarSelectedItem = $( '.selected-category .showcase-slider' ).slick('slickCurrentSlide');
+	localStorage.pulsarSelectedCategory = $( '.selected-category' ).index();
+	localStorage.pulsarKeymap = $( '.selected-item' ).data( 'keymap' );
 	if ( typeof info == 'string' ) {
 		showMessage( info, function() {
 			$( '#container' ).fadeOut( 100, function() {
-				window.location.href = $( '.selected-item' ).data( 'url' ) + '&pulsarSelectedItem=' + $( '.selected-category .showcase-slider' ).slick('slickCurrentSlide') + '&pulsarSelectedCategory=' + $( '.selected-category' ).index();
+				window.location.href = $( '.selected-item' ).data( 'url' ) + '?pulsarActive=yes';
 			});
 		});
 	} else {
 		$( '#container' ).fadeOut( 100, function() {
-			window.location.href = $( '.selected-item' ).data( 'url' ) + '&pulsarSelectedItem=' + $( '.selected-category .showcase-slider' ).slick('slickCurrentSlide') + '&pulsarSelectedCategory=' + $( '.selected-category' ).index();
+			window.location.href = $( '.selected-item' ).data( 'url' ) + '?pulsarActive=yes';
 		});
 	}
 }

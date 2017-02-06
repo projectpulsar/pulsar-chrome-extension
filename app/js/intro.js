@@ -1,34 +1,25 @@
 // -- intro.js --
 //
-// Gamepad initialization and layout definition.
+// Gamepad initialization and layout definition. Redirects to the channel or game selection pages.
 
 var gamepads;
 var mainGamepad;
 var gamepadIndex;
 var gamepadButtons;
 var gamepadAxes;
+var prevBtnPressed = [ true, true, true, true ];
 var waitingAction = false;
 var lastPressedButton;
+var configURL = urlParameter( 'config' );
+var configuration;
+var pulsarVersion = chrome.app.getDetails().version;
 
 document.onkeydown = function ( event ) {
 	if ( event.which == '27' ) window.close();
 };
 
-if ( typeof localStorage.pulsarGamepadLayout !== 'string' ) {
-	localStorage.pulsarGamepadLayout = JSON.stringify( [
-		{ description: 'back', button: '', gamepad_id: '' },
-		{ description: 'start', button: '', gamepad_id: '' },
-		{ description: 'up', button: '', gamepad_id: '' },
-		{ description: 'down', button: '', gamepad_id: '' },
-		{ description: 'left', button: '', gamepad_id: '' },
-		{ description: 'right', button: '', gamepad_id: '' }
-	] );
-}
-
-gamepadLayout = JSON.parse( localStorage.pulsarGamepadLayout );
-
 function gamepadAnyButtonPressed() {
-	for (var i = 0; i < gamepadButtons; i++) {
+	for (var i = 0; i < 4; i++) {
 		if ( gamepads[gamepadIndex].buttons[i].pressed ) {
 			return true;
 		}
@@ -57,6 +48,7 @@ function checkGamepad() {
 						for ( i = 4; i < gamepad.buttons.length; i++ ) {
 							if ( gamepad.buttons[i].pressed && ( typeof lastPressedButton  == 'undefined' || !gamepad.buttons[lastPressedButton].pressed ) ) {
 								lastPressedButton = i;
+								prevBtnPressed[i] = true;
 								gamepadLayout[t].button = i;
 								gamepadLayout[t].gamepad_id = gamepad.id;
 								localStorage.pulsarGamepadLayout = JSON.stringify( gamepadLayout );
@@ -77,9 +69,29 @@ function checkGamepad() {
 		}
 
 		if ( !waitingAction ) {
-			$( 'body' ).fadeOut( 100, function() {
-				window.location.href = 'main.html';
-			});
+			if ( configuration.channels.length == 1 ) {
+				localStorage.pulsarChannel = 0;
+				localStorage.pulsarRef = 'intro';
+			}				
+			if ( ( typeof localStorage.pulsarFirstTipShown == 'undefined' ) || ( localStorage.pulsarFirstTipShown !== pulsarVersion ) ) {
+				showMessage( '<span class=\'button\'>Up/Down/Left/Right:</span> Change selection<br><span class=\'button\'>Button 1:</span> Enter channel/Play game<br><span class=\'button\'>Back:</span> Return to channel selection<br><span class=\'button\'>Back+Start:</span> Return to game selection<br><span class=\'button\'>ESC:</span> Exit Pulsar', function() {
+					localStorage.pulsarFirstTipShown = pulsarVersion;
+					if ( configuration.channels.length > 1 ) {
+						window.location.href = 'channels.html';
+					} else {
+						window.location.href = 'main.html';
+					}				
+				});
+				requestAnimationFrame( checkHideMessage );
+			} else {
+					if ( configuration.channels.length > 1 ) {
+						window.location.href = 'channels.html';
+					} else {
+						window.location.href = 'main.html';
+					}				
+			}
+		} else {
+			requestAnimationFrame( checkGamepad );
 		}
 
 	} else {
@@ -106,8 +118,48 @@ function checkGamepad() {
 					}
 			}
 		}
+		requestAnimationFrame( checkGamepad );
 	}
-	requestAnimationFrame( checkGamepad );
 }
 
-requestAnimationFrame( checkGamepad );
+function checkHideMessage() {
+	var gamepad = navigator.getGamepads()[ mainGamepad ];
+	if ( typeof gamepad == 'object' ) {
+		if ( ( ( typeof showingMessage == 'boolean' ) && ( showingMessage ) ) || ( typeof showingMessage == 'function' ) ) {
+			if ( ( gamepad.buttons[0].pressed && !prevBtnPressed[0] ) ||
+				 ( gamepad.buttons[1].pressed && !prevBtnPressed[1] ) ||
+				 ( gamepad.buttons[2].pressed && !prevBtnPressed[2] ) ||
+				 ( gamepad.buttons[3].pressed && !prevBtnPressed[3] ) ) {
+					hideMessage();
+			}
+		}
+	}
+	for ( i = 0; i < 4; i++ ) {
+		prevBtnPressed[i] = gamepad.buttons[i].pressed;
+	}
+	requestAnimationFrame( checkHideMessage );
+}
+
+localStorage.pulsarConfig = configURL;
+localStorage.pulsarSelectedItem = 0;
+localStorage.pulsarSelectedCategory = 0;
+
+$.ajax( configURL, {
+	type : 'GET',
+	cache: false,
+	dataType: 'json' } )
+	.done( function( config ) {
+		configuration = config;
+		if ( typeof localStorage.pulsarGamepadLayout !== 'string' ) {
+			localStorage.pulsarGamepadLayout = JSON.stringify( [
+				{ description: 'back', button: '', gamepad_id: '' },
+				{ description: 'start', button: '', gamepad_id: '' },
+				{ description: 'up', button: '', gamepad_id: '' },
+				{ description: 'down', button: '', gamepad_id: '' },
+				{ description: 'left', button: '', gamepad_id: '' },
+				{ description: 'right', button: '', gamepad_id: '' }
+			] );
+		}
+		gamepadLayout = JSON.parse( localStorage.pulsarGamepadLayout );
+		requestAnimationFrame( checkGamepad );
+});

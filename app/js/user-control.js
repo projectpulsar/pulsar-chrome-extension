@@ -16,7 +16,7 @@ function checkGamepad() {
 			if ( ( gamepad.buttons[0].pressed && !prevBtnPressed[0] ) ||
 				 ( gamepad.buttons[1].pressed && !prevBtnPressed[1] ) ||
 				 ( gamepad.buttons[2].pressed && !prevBtnPressed[2] ) ||
-				 ( gamepad.buttons[3].pressed && !prevBtnPressed[0] ) ) {
+				 ( gamepad.buttons[3].pressed && !prevBtnPressed[3] ) ) {
 					hideMessage();
 			} else if ( gamepad.buttons[gamepadLayout[0].button].pressed && !prevBtnPressed[gamepadLayout[0].button] ) {
 					hideMessage( false );
@@ -39,17 +39,12 @@ function checkGamepad() {
 				if ( typeof UCAction3 == 'function' ) UCAction3();
 			} else if ( gamepad.buttons[3].pressed && !prevBtnPressed[3] ) {
 				if ( typeof UCAction4 == 'function' ) UCAction4();
-			} else if ( !gamepad.buttons[gamepadLayout[0].button].pressed || !gamepad.buttons[gamepadLayout[1].button].pressed ) {
-				if ( prevBtnPressed[gamepadLayout[0].button] && prevBtnPressed[gamepadLayout[1].button] ) {
-					window.location.href = 'main.html';
-				}
 			} else if ( gamepad.buttons[gamepadLayout[0].button].pressed && !prevBtnPressed[gamepadLayout[0].button] ) {
 				if ( typeof UCActionBack == 'function' ) UCActionBack();
 			} else if ( gamepad.buttons[gamepadLayout[1].button].pressed && !prevBtnPressed[gamepadLayout[1].button] ) {
 				if ( typeof UCActionStart == 'function' ) UCActionStart();
 			}
 		}
-
 		for ( i = 0; i < gamepad.buttons.length; i++ ) {
 			prevBtnPressed[i] = gamepad.buttons[i].pressed;
 		}

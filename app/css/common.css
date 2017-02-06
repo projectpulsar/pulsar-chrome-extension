@@ -7,6 +7,11 @@ html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockq
 	vertical-align: baseline;
 }
 
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
 * {
 	cursor: none;
 }
@@ -31,4 +36,22 @@ a {
 
 @media only screen and (min-width: 1920px) {
 	html { font-size: 80%; }
+}
+
+#message-box {
+	min-width: 400px;
+	border: 2px solid #333;
+	padding: 2%;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	background: #ffffff;
+	border-radius: 12px;
+	font-size: 2.4rem;
+	font-family: 'Oswald';
+	text-align: left;
+	white-space: pre-wrap;
+	color: #333;
+	opacity: 0;
+	z-index: 100;
 }

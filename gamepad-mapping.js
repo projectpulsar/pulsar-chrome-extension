@@ -8,6 +8,15 @@ var pulsarPrevRight = false;
 var pulsarPrevDown = false;
 var pulsarPrevUp = false;
 
+function pulsarURLParameter( parameter ) {
+	var results = new RegExp( '[\?&]' + parameter + '=([^&#]*)' ).exec( window.location.href );
+	if ( results !== null ) {	
+		return decodeURI( results[1] );
+	} else {
+		return '';
+	}
+}
+
 function pulsarTriggerKeyboardKeydown( keyCode )
 {
 	var pulsarEventObj = document.createEvent( 'Events' );
@@ -114,7 +123,7 @@ function pulsarCheckGamepad() {
 		}
 
 		if ( ( pulsarGamepad.buttons[ pulsarGamepadLayout[0].button ].pressed ) && ( pulsarGamepad.buttons[ pulsarGamepadLayout[1].button ].pressed ) ) {
-			window.location.href = pulsarExtensionUrl + '/app/main.html?selectedItem=' + pulsarSelectedItem + '&selectedCategory=' + pulsarSelectedCategory;
+			window.location.href = pulsarExtensionUrl + '/app/main.html';
 		}
 
 		for ( i = 0; i < pulsarGamepad.buttons.length; i++ ) {

@@ -2,6 +2,17 @@
 //
 // Privileged script providing some functions for non-privileged modules.
 
+chrome.runtime.onMessageExternal.addListener( function(request, sender, sendResponse) {
+	if (request) {
+		if (request.message) {
+			if (request.message == "getPulsarVersion") {
+				sendResponse( chrome.app.getDetails().version );
+			}
+		}
+	}
+	return true;
+});
+
 chrome.runtime.onMessage.addListener(
 	function( request, sender, sendResponse ) {
 		if ( request.action == 'getUrl' ) {
@@ -12,6 +23,9 @@ chrome.runtime.onMessage.addListener(
 			return true;
 		} else if ( request.action == 'getMainGamepad' ) {
 			getMainGamepad( sendResponse );
+			return true;
+		} else if ( request.action == 'getKeymap' ) {
+			getKeymap( sendResponse );
 			return true;
 		}
 });
@@ -28,4 +42,8 @@ function getGamepadLayout( sendResponse ){
 
 function getMainGamepad( sendResponse ){
 	sendResponse( localStorage.pulsarMainGamepad );
+}
+
+function getKeymap( sendResponse ){
+	sendResponse( JSON.stringify( localStorage.pulsarKeymap ) );
 }

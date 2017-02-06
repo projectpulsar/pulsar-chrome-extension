@@ -5,9 +5,9 @@
 //  - Declaring Pulsar environment variables
 //  - Gamepad-keyboard mapping
 
-var currentUrl;
+var pulsarCurrentUrl;
 
-function urlParameter( url, parameter ) {
+function pulsarURLParameter( url, parameter ) {
 	var results = new RegExp( '[\?&]' + parameter + '=([^&#]*)' ).exec( url );
 	if ( results !== null ) {	
 		return decodeURI( results[1] );
@@ -17,8 +17,8 @@ function urlParameter( url, parameter ) {
 }
 
 chrome.runtime.sendMessage( { action: 'getUrl' }, function( response ) {
-	currentUrl = response;
-	if ( currentUrl.includes( 'pulsarActive=yes' ) ) {
+	pulsarCurrentUrl = response;
+	if ( pulsarCurrentUrl.includes( 'pulsarActive=yes' ) ) {
 
 		chrome.runtime.sendMessage( { action: 'getMainGamepad' }, function( response ) {
 			var mainGamepad = response;
@@ -40,56 +40,41 @@ chrome.runtime.sendMessage( { action: 'getUrl' }, function( response ) {
 				};
 				( document.head || document.documentElement ).appendChild( gamepadLayoutScript );
 
-				var pointerHideScript = document.createElement( 'script' );
-				pointerHideScript.innerText = 'document.styleSheets[0].insertRule( "* { cursor: none !important }", 0 ); document.styleSheets[0].insertRule( "::-webkit-scrollbar { display: none !important }", 0 );';
-				pointerHideScript.onload = function() {
-					this.parentNode.removeChild( this );
-				};
-				( document.head || document.documentElement ).appendChild( pointerHideScript );
 
-				var extensionUrlScript = document.createElement( 'script' );
-				extensionUrlScript.innerText = 'var pulsarExtensionUrl = "chrome-extension://' + chrome.runtime.id + '";';
-				extensionUrlScript.onload = function() {
-					this.parentNode.removeChild( this );
-				};
-				( document.head || document.documentElement ).appendChild( extensionUrlScript );
+				chrome.runtime.sendMessage( { action: 'getKeymap' }, function( response ) {
+					var keymap = response;
 
-				var selectedItem = urlParameter( currentUrl, 'pulsarSelectedItem' );
-				var selectedItemScript = document.createElement( 'script' );
-				selectedItemScript.innerText = 'var pulsarSelectedItem = ' + selectedItem + ';';
-				selectedItemScript.onload = function() {
-					this.parentNode.removeChild( this );
-				};
-				( document.head || document.documentElement ).appendChild( selectedItemScript );
-
-				var selectedCategory = urlParameter( currentUrl, 'pulsarSelectedCategory' );
-				var selectedCategoryScript = document.createElement( 'script' );
-				selectedCategoryScript.innerText = 'var pulsarSelectedCategory = ' + selectedCategory + ';';
-				selectedCategoryScript.onload = function() {
-					this.parentNode.removeChild( this );
-				};
-				( document.head || document.documentElement ).appendChild( selectedCategoryScript );
-
-				var keymap = urlParameter( currentUrl, 'pulsarKeymap' );
-				if ( keymap != '' ) {
 					var keymapScript = document.createElement( 'script' );
-					keymapScript.innerText = 'var pulsarKeymap = ' + keymap + ';';
+					keymapScript.innerText = 'var pulsarKeymap = ' + JSON.parse( keymap ) + ';';
 					keymapScript.onload = function() {
 						this.parentNode.removeChild( this );
 					};
 					( document.head || document.documentElement ).appendChild( keymapScript );
-				}
 
-				var gamepadMappingScript = document.createElement( 'script' );
-				gamepadMappingScript.src = chrome.extension.getURL( 'gamepad-mapping.js' );
-				gamepadMappingScript.onload = function() {
-					this.parentNode.removeChild( this );
-				};
-				( document.head || document.documentElement ).appendChild( gamepadMappingScript );
+					var pointerHideScript = document.createElement( 'script' );
+					pointerHideScript.innerText = 'document.styleSheets[0].insertRule( "* { cursor: none !important }", 0 ); document.styleSheets[0].insertRule( "::-webkit-scrollbar { display: none !important }", 0 );';
+					pointerHideScript.onload = function() {
+						this.parentNode.removeChild( this );
+					};
+					( document.head || document.documentElement ).appendChild( pointerHideScript );
 
+					var extensionUrlScript = document.createElement( 'script' );
+					extensionUrlScript.innerText = 'var pulsarExtensionUrl = "chrome-extension://' + chrome.runtime.id + '";';
+					extensionUrlScript.onload = function() {
+						this.parentNode.removeChild( this );
+					};
+					( document.head || document.documentElement ).appendChild( extensionUrlScript );
+
+					var gamepadMappingScript = document.createElement( 'script' );
+					gamepadMappingScript.src = chrome.extension.getURL( 'gamepad-mapping.js' );
+					gamepadMappingScript.onload = function() {
+						this.parentNode.removeChild( this );
+					};
+					( document.head || document.documentElement ).appendChild( gamepadMappingScript );
+
+				});
 			});
 		});
-
 	}
 
 });

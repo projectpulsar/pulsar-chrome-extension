@@ -2,8 +2,13 @@
 //
 // Script for launching Pulsar from the extension (browser action) pop-up window (pulsar.html), and settings management.
 
+var pulsarPlatform = 'chrome-extension';
+var pulsarServerBase = 'https://projectpulsar.github.io/platform-resources';
+var pulsarVersion = chrome.app.getDetails().version;
+var pulsarServerFull = pulsarServerBase + '/' + pulsarPlatform + '/' + pulsarVersion.substr(0, pulsarVersion.lastIndexOf( '.' ) );
+
 function launch() {
-	chrome.windows.create( { url: 'app/intro.html', state: 'fullscreen' } );
+	chrome.windows.create( { url: 'app/intro.html?config=' + pulsarServerFull + '/pulsar.json', state: 'fullscreen' } );
 }
 
 function resetSettings() {

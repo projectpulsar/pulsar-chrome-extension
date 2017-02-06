@@ -24,3 +24,7 @@ html, body {
 	vertical-align: middle;
 	margin: 1rem;
 }
+
+.button {
+	font-weight: bold;
+}
